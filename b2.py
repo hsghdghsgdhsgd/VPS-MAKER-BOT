@@ -13,8 +13,8 @@ import asyncio
 from discord import app_commands
 import requests
 
-# Set Your Bot Token
-TOKEN = ''
+# Set Your Bot Token dude 
+TOKEN = 'botauthtoken'
 RAM_LIMIT = '2g' #Set Your Own Ram How Much You Want To Give Your Users
 SERVER_LIMIT = 2 #you can change it!
 database_file = 'database.txt'
@@ -26,7 +26,7 @@ intents.message_content = False
 bot = commands.Bot(command_prefix='/', intents=intents)
 client = docker.from_env()
 
-whitelist_ids = {"1128161197766746213"}  # Replace with actual user IDs
+whitelist_ids = {"1312696690674892992"}  # Replace with actual user IDs
 
 # Utility Functions
 def add_to_database(userid, container_name, ssh_command):
@@ -84,36 +84,38 @@ async def capture_ssh_session_line(process):
 user_credits = {}
 
 # Cuty.io API key (Your account key)
-API_KEY = 'ebe681f9e37ef61fcfd756396'
+API_KEY = '95d6cef4ab0f21f9a20771c575783d054e1ba079'
 
-# Slash command: earnCredit
 @bot.tree.command(name="earncredit", description="Generate a URL to shorten and earn credits.")
 async def earncredit(interaction: discord.Interaction):
     print("Received request to shorten URL")
     user_id = interaction.user.id
 
-    # Define a default URL to shorten
-    default_url = "https://cuty.io/e58WUzLMmE3S"  # Change this as needed
-
-    # Make a request to Cuty.io API to shorten the default URL
+    default_url = "https://cuty.io/dsvPZsefYWaT"  # Change this as needed
     api_url = f"https://cutt.ly/api/api.php?key={API_KEY}&short={default_url}"
     print(f"Making API call to: {api_url}")
-    response = requests.get(api_url).json()
-    print(f"API response: {response}")
+    
+    try:
+        response = requests.get(api_url).json()
+        print(f"API response: {response}")
 
-    # Check if the URL was successfully shortened
-    if response['url']['status'] == 7:
-        shortened_url = response['url']['shortLink']
-        credits_earned = 1  # Update to 1 credit for each shortening
+        # Make sure 'url' key exists
+        if 'url' in response and response['url'].get('status') == 7:
+            shortened_url = response['url'].get('shortLink', 'URL not returned')
+            credits_earned = 1
+            user_credits[user_id] = user_credits.get(user_id, 0) + credits_earned
 
-        # Add credits to user
-        user_credits[user_id] = user_credits.get(user_id, 0) + credits_earned
+            await interaction.response.send_message(
+                f"Success! Here's your shortened URL: {shortened_url}\nYou earned {credits_earned} credit!"
+            )
+        else:
+            error_message = response.get('url', {}).get('title', '❌ Failed to generate a shortened URL. Please try again.')
+            await interaction.response.send_message(error_message)
 
-        await interaction.response.send_message(f"Success! Here's your shortened URL: {shortened_url}. You earned {credits_earned} credit!")
-    else:
-        # Handle API error messages
-        error_message = response['url'].get('title', 'Failed to generate a shortened URL. Please try again.')
-        await interaction.response.send_message(error_message)
+    except Exception as e:
+        print(f"Error during API call: {e}")
+        await interaction.response.send_message("An error occurred while generating your shortened URL.")
+
 
 # Slash command: bal
 @bot.tree.command(name="bal", description="Check your credit balance.")
@@ -121,7 +123,34 @@ async def bal(interaction: discord.Interaction):
     user_id = interaction.user.id
     credits = user_credits.get(user_id, 0)
     await interaction.response.send_message(f"You have {credits} credits.")
+#portnew
+@bot.tree.command(name="port-forward-new", description="Set up port forwarding for a container using localhost.run.")
+@app_commands.describe(container_name="The name of the container", container_port="The port inside the container to forward")
+async def port_forward_win(interaction: discord.Interaction, container_name: str, container_port: int):
+    await interaction.response.defer()  # Allow time for execution
+    try:
+        # Use localhost.run for port forwarding
+        command = f"docker exec -it {container_name} ssh -R 80:localhost:{container_port} ssh.localhost.run"
+        process = await asyncio.create_subprocess_shell(command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        stdout, stderr = await process.communicate()
 
+        if stdout:
+            output = stdout.decode().strip()
+            await interaction.followup.send(embed=discord.Embed(
+                description=f"### Port Forwarding Successful:\n{output}",
+                color=0x00ff00
+            ))
+        if stderr:
+            error = stderr.decode().strip()
+            await interaction.followup.send(embed=discord.Embed(
+                description=f"### Error in Port Forwarding:\n{error}",
+                color=0xff0000
+            ))
+    except Exception as e:
+        await interaction.followup.send(embed=discord.Embed(
+            description=f"### Failed to set up port forwarding: {str(e)}",
+            color=0xff0000
+        ))
 
 # Node Status Command
 def get_node_status():
@@ -420,7 +449,7 @@ def generate_random_port():
     return random.randint(1025, 65535)
 
 async def create_server_task(interaction):
-    await interaction.response.send_message(embed=discord.Embed(description="### Creating Instance, This takes a few seconds. Powered by [CrashOfGuys](<https://discord.com/invite/VWm8zUEQN8>)", color=0x00ff00))
+    await interaction.response.send_message(embed=discord.Embed(description="### Creating Instance, This takes a few seconds. Powered by [AlgonivNodes](<https://discord.gg/vfvahDthMB>)", color=0x00ff00))
     userid = str(interaction.user.id)
     if count_user_servers(userid) >= SERVER_LIMIT:
         await interaction.followup.send(embed=discord.Embed(description="```Error: Instance Limit-reached```", color=0xff0000))
@@ -430,7 +459,7 @@ async def create_server_task(interaction):
 
     try:
         container_id = subprocess.check_output([
-           "docker", "run", "-itd", "--privileged", "--hostname", "crashcloud", "--cap-add=ALL", image
+           "docker", "run", "-itd", "--privileged", "--hostname", "algonivnodes", "--cap-add=ALL", image
         ]).strip().decode('utf-8')
     except subprocess.CalledProcessError as e:
         await interaction.followup.send(embed=discord.Embed(description=f"### Error creating Docker container: {e}", color=0xff0000))
@@ -459,9 +488,9 @@ async def create_server_task(interaction):
 async def deploy_ubuntu(interaction: discord.Interaction):
     await create_server_task(interaction)
 
-#@bot.tree.command(name="deploy-debian", description="Creates a new Instance with Debian 12")
-#async def deploy_ubuntu(interaction: discord.Interaction):
-#    await create_server_task_debian(interaction)
+@bot.tree.command(name="deploy-debian", description="Creates a new Instance with Debian 12")
+async def deploy_ubuntu(interaction: discord.Interaction):
+    await create_server_task_debian(interaction)
 
 @bot.tree.command(name="regen-ssh", description="Generates a new SSH session for your instance")
 @app_commands.describe(container_name="The name/ssh-command of your Instance")
@@ -486,13 +515,14 @@ async def restart(interaction: discord.Interaction, container_name: str):
 @bot.tree.command(name="ping", description="Check the bot's latency.")
 async def ping(interaction: discord.Interaction):
     await interaction.response.defer()
-    latency = round(bot.latency * 1000)
+    latency = 15  # Replace with your desired "good" ping value in ms
     embed = discord.Embed(
         title="🏓 Pong!",
         description=f"Latency: {latency}ms",
         color=discord.Color.green()
     )
-    await interaction.response.send_message(embed=embed)
+    await interaction.followup.send(embed=embed)
+
 
 @bot.tree.command(name="list", description="Lists all your Instances")
 async def list_servers(interaction: discord.Interaction):
@@ -503,7 +533,7 @@ async def list_servers(interaction: discord.Interaction):
         embed = discord.Embed(title="Your Instances", color=0x00ff00)
         for server in servers:
             _, container_name, _ = server.split('|')
-            embed.add_field(name=container_name, value="32GB RAM - Premuim - 4 cores", inline=False)
+            embed.add_field(name=container_name, value="7GB RAM - AlgonivNodes Premium - 2 cores", inline=False)
         await interaction.followup.send(embed=embed)
     else:
         await interaction.followup.send(embed=discord.Embed(description="You have no servers.", color=0xff0000))
@@ -612,44 +642,6 @@ async def help_command(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 
+
 # run the bot
 bot.run(TOKEN)
-
-
-@app_commands.command(name="delvps", description="Delete all VPS containers for a user (Admin only)")
-@app_commands.checks.has_permissions(administrator=True)
-async def delvps(interaction: discord.Interaction, user_id: str):
-    await interaction.response.defer(thinking=True)
-    docker_client = docker.from_env()
-    deleted_containers = []
-
-    for container in docker_client.containers.list(all=True):
-        if user_id in container.name:
-            container.remove(force=True)
-            deleted_containers.append(container.name)
-
-    if deleted_containers:
-        await interaction.followup.send(f"Deleted containers: {', '.join(deleted_containers)}")
-    else:
-        await interaction.followup.send("No containers found for the specified user.")
-
-
-@app_commands.command(name="node_admin", description="Show all user IDs, their containers, and usage (Admin only)")
-@app_commands.checks.has_permissions(administrator=True)
-async def node_admin(interaction: discord.Interaction):
-    await interaction.response.defer(thinking=True)
-    docker_client = docker.from_env()
-    container_data = []
-
-    for container in docker_client.containers.list(all=True):
-        stats = container.stats(stream=False)
-        cpu_usage = stats["cpu_stats"]["cpu_usage"]["total_usage"] / 1e9
-        memory_usage = stats["memory_stats"]["usage"] / 1e6
-        container_data.append(f"User: {container.name.split('_')[0]} | ID: {container.id[:12]} | CPU: {cpu_usage:.2f}% | RAM: {memory_usage:.2f}MB")
-
-    if container_data:
-        await interaction.followup.send("```
-" + "\n".join(container_data) + "
-```")
-    else:
-        await interaction.followup.send("No containers found.")
