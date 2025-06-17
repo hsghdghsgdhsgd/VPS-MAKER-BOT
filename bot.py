@@ -14,7 +14,7 @@ from discord import app_commands
 import requests
 
 # Set Your Bot Token dude 
-TOKEN = 'yourauthtoekn'
+TOKEN = 'yourbotauthtoken'
 RAM_LIMIT = '2g' #Set Your Own Ram How Much You Want To Give Your Users
 SERVER_LIMIT = 2 #you can change it!
 database_file = 'database.txt'
@@ -106,7 +106,7 @@ async def earncredit(interaction: discord.Interaction):
             user_credits[user_id] = user_credits.get(user_id, 0) + credits_earned
 
             await interaction.response.send_message(
-                f"✅ Success! Here's your shortened URL: {shortened_url}\nYou earned {credits_earned} credit!"
+                f"Success! Here's your shortened URL: {shortened_url}\nYou earned {credits_earned} credit!"
             )
         else:
             error_message = response.get('url', {}).get('title', '❌ Failed to generate a shortened URL. Please try again.')
@@ -114,7 +114,7 @@ async def earncredit(interaction: discord.Interaction):
 
     except Exception as e:
         print(f"Error during API call: {e}")
-        await interaction.response.send_message("⚠️ An error occurred while generating your shortened URL.")
+        await interaction.response.send_message("An error occurred while generating your shortened URL.")
 
 
 # Slash command: bal
@@ -488,9 +488,9 @@ async def create_server_task(interaction):
 async def deploy_ubuntu(interaction: discord.Interaction):
     await create_server_task(interaction)
 
-#@bot.tree.command(name="deploy-debian", description="Creates a new Instance with Debian 12")
-#async def deploy_ubuntu(interaction: discord.Interaction):
-#    await create_server_task_debian(interaction)
+@bot.tree.command(name="deploy-debian", description="Creates a new Instance with Debian 12")
+async def deploy_ubuntu(interaction: discord.Interaction):
+    await create_server_task_debian(interaction)
 
 @bot.tree.command(name="regen-ssh", description="Generates a new SSH session for your instance")
 @app_commands.describe(container_name="The name/ssh-command of your Instance")
